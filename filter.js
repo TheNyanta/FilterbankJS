@@ -1,7 +1,8 @@
 var invert = function() {
 var canvas = document.getElementById('canvas');
 context = canvas.getContext('2d');
-
+var img = document.getElementById("output");
+context.drawImage(img, 10, 10);
 var imageData = context.getImageData(imageX, imageY, image.width, image.height);
 var dataArr = imageData.data;
 
