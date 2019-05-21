@@ -14,10 +14,6 @@
   var loadFile = function(event) {
     var output = document.getElementById('output');
     output.src = URL.createObjectURL(event.target.files[0]);
-    var c = document.getElementById("canvas");
-  var ctx = c.getContext("2d");
-  var img = document.getElementById("output");
-  ctx.drawImage(img, 10, 10);
   };
 </script> 
 
