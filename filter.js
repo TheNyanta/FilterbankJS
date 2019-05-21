@@ -3,7 +3,7 @@ var canvas = document.getElementById('canvas');
 context = canvas.getContext('2d');
 var img = document.getElementById("output");
 context.drawImage(img, 10, 10);
-var imageData = context.getImageData(img.x, img.y, image.width, image.height);
+var imageData = context.getImageData(image.x, image.y, image.width, image.height);
 var dataArr = imageData.data;
 
 for(var i = 0; i < dataArr.length; i += 4)
