@@ -1,23 +1,49 @@
 <!DOCTYPE html>
 <head>
-  <title>Filterbank</title>
-  <script src="filter.js"></script>
+	<title>Filterbank</title>
+	<script src="filter.js"></script>
 </head>
-<body>
-<h1>Image</h1>
-<button type="button" onclick="invert()">Invert</button>
-<input type="file" accept="image/*" onchange="loadFile(event)">
-<br>
-<img id="output"/>
-<br>
-<canvas id="canvas" width="400" height="300">
-  
-<script>
-  var loadFile = function(event) {
-    var output = document.getElementById('output');
-    output.src = URL.createObjectURL(event.target.files[0]);
-  };
-</script> 
-
+<body style="background-color:dimgrey;">
+	<input type="file" accept="image/*" onchange="loadFile(event)">
+	<br>
+	<button type="button" onclick="drawImage()">Draw</button>
+	<button type="button" onclick="invert()">Invert</button>
+	<br>
+	<canvas id="canvas">
+	
+	<script>
+	// +------------------+
+	// | Global Variables |
+	// +------------------+
+	var canvas = document.getElementById("canvas");
+	var	ctx = canvas.getContext("2d");
+	var img = new Image();
+	var data;
+	var imageData;
+	// +-----------+
+	// | Functions |
+	// +-----------+
+	function loadFile(event) {
+		img.src = URL.createObjectURL(event.target.files[0]);
+	};	
+	function drawImage() {
+		canvas.height = img.height;
+		canvas.width = img.width;
+		ctx.drawImage(img, 0, 0);
+	};	
+	function refreshData() {
+		imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		data = imageData.data;
+	};	
+	function invert() {
+            refreshData();
+            for (var i = 0; i < data.length; i += 4) {
+                data[i] = 255 - data[i]; // red
+                data[i + 1] = 255 - data[i + 1]; // green
+                data[i + 2] = 255 - data[i + 2]; // blue
+            }
+            ctx.putImageData(imageData, 0, 0);
+        };
+	</script>
 </body>
  
