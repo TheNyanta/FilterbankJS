@@ -19,6 +19,7 @@
 	var img = new Image();
 	var data;
 	var imageData;
+		var singleValues;
 	// +-----------+
 	// | Functions |
 	// +-----------+
@@ -42,7 +43,34 @@
                 data[i + 2] = 255 - data[i + 2]; // blue
             }
             ctx.putImageData(imageData, 0, 0);
-        };
+        }; 
+		function convertToSingleValues() {
+			refreshData();
+			for (var i = 0; i < data.lenght; i+= 4) {
+				singleValues[i/4] = 1000000000*data[i]+1000000*data[i+1]+1000*data[i+2]+data[i+3];
+			}
+		}
+		function convertToData() {
+			for (var i = 0; i < singleValues.length; i++) {
+			data[i+3] = ((singleValues[i]%1000000000)%1000000)%1000;
+			data[i+2] = (((singleValues[i]-data[i+3])%1000000000)%1000000)/1000;
+			data[i+1] = ((singleValues[i]-data[i+3]-[i+2])%1000000000)/1000000;
+			data[i]=(singleValues[i]-data[i+3]-data[i+2]-data[i+1])/1000000000;
+			refreshData();
+			ctx.putImageData(imageData, 0, 0);
+											
+		}}
+		function filterbank() {
+			convertToSingleValues();
+			// filterbank code
+			convertToData();
+		}
+				
+		
+		
+		
+	
+		
 	</script>
 </body>
  
