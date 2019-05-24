@@ -1,43 +1,48 @@
 <!DOCTYPE html>
+
 <head>
-	<title>Filterbank</title>	
+    <title>Filterbank</title>
 </head>
+
 <body style="background-color:dimgrey;">
-	<input type="file" accept="image/*" onchange="loadFile(event)">
-	<br>
-	<button type="button" onclick="drawImage()">Draw</button>
-	<button type="button" onclick="invert()">Invert</button>
-	<button type="button" onclick="filterbank()">FilterbankTodo</button>
-	
-	<br>
-	<canvas id="canvas">
-	
-	<script>
-	// +------------------+
-	// | Global Variables |
-	// +------------------+
-	var canvas = document.getElementById("canvas");
-	var	ctx = canvas.getContext("2d");
-	var img = new Image();
-	var data;
-	var imageData;
-		var singleValues;
-	// +-----------+
-	// | Functions |
-	// +-----------+
-	function loadFile(event) {
-		img.src = URL.createObjectURL(event.target.files[0]);
-	};	
-	function drawImage() {
-		canvas.height = img.height;
-		canvas.width = img.width;
-		ctx.drawImage(img, 0, 0);
-	};	
-	function refreshData() {
-		imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-		data = imageData.data;
-	};	
-	function invert() {
+    <input type="file" accept="image/*" onchange="loadFile(event)">
+    <br>
+    <button type="button" onclick="drawImage()">Draw</button>
+    <button type="button" onclick="invert()">Invert</button>
+    <button type="button" onclick="filterbank()">FilterbankTodo</button>
+
+    <br>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // +------------------+
+        // | Global Variables |
+        // +------------------+
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var img = new Image();
+        var data;
+        var imageData;
+        var singleValues;
+        // +-----------+
+        // | Functions |
+        // +-----------+
+        function loadFile(event) {
+            img.src = URL.createObjectURL(event.target.files[0]);
+        };
+
+        function drawImage() {
+            canvas.height = img.height;
+            canvas.width = img.width;
+            ctx.drawImage(img, 0, 0);
+        };
+
+        function refreshData() {
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            data = imageData.data;
+        };
+
+        function invert() {
             refreshData();
             for (var i = 0; i < data.length; i += 4) {
                 data[i] = 255 - data[i]; // red
@@ -45,34 +50,31 @@
                 data[i + 2] = 255 - data[i + 2]; // blue
             }
             ctx.putImageData(imageData, 0, 0);
-        }; 
-		function convertToSingleValues() {
-			refreshData();
-			for (var i = 0; i < data.lenght; i+= 4) {
-				singleValues[i/4] = 1000000000*data[i]+1000000*data[i+1]+1000*data[i+2]+data[i+3];
-			}
-		}
-		function convertToData() {
-			for (var i = 0; i < singleValues.length; i++) {
-			data[i+3] = ((singleValues[i]%1000000000)%1000000)%1000;
-			data[i+2] = 0;//(((singleValues[i]-data[i+3])%1000000000)%1000000)/1000;
-			data[i+1] = ((singleValues[i]-data[i+3]-[i+2])%1000000000)/1000000;
-			data[i]=(singleValues[i]-data[i+3]-data[i+2]-data[i+1])/1000000000;
-			refreshData();
-			ctx.putImageData(imageData, 0, 0);
-											
-		}}
-		function filterbank() {
-			convertToSingleValues();
-			// filterbank code
-			convertToData();
-		}
-				
-		
-		
-		
-	
-		
-	</script>
+        };
+
+        function convertToSingleValues() {
+            refreshData();
+            for (var i = 0; i < data.lenght; i += 4) {
+                singleValues[i / 4] = 1000000000 * data[i] + 1000000 * data[i + 1] + 1000 * data[i + 2] + data[i + 3];
+            }
+        };
+
+        function convertToData() {
+            for (var i = 0; i < singleValues.length; i++) {
+                data[i + 3] = ((singleValues[i] % 1000000000) % 1000000) % 1000;
+                data[i + 2] = (((singleValues[i] - data[i + 3]) % 1000000000) % 1000000) / 1000;
+                data[i + 1] = ((singleValues[i] - data[i + 3] - [i + 2]) % 1000000000) / 1000000;
+                data[i] = (singleValues[i] - data[i + 3] - data[i + 2] - data[i + 1]) / 1000000000;
+            }
+            refreshData();
+            ctx.putImageData(imageData, 0, 0);
+        };
+
+        function filterbank() {
+            convertToSingleValues();
+            // filterbank code
+            convertToData();
+        };
+
+    </script>
 </body>
- 
