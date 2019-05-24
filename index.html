@@ -54,7 +54,7 @@
 
         function convertToSingleValues() {
             refreshData();
-            for (var i = 0; i < data.lenght; i += 4) {
+            for (var i = 0; i < data.length; i += 4) {
                 singleValues[i / 4] = 1000000000 * data[i] + 1000000 * data[i + 1] + 1000 * data[i + 2] + data[i + 3];
             }
         };
