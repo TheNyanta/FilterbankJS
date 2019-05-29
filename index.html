@@ -11,7 +11,18 @@
     <button type="button" onclick="drawOriginal()">Draw Original</button>
     <button type="button" onclick="invert()">Invert</button>
     <button type="button" onclick="grayscale()">Grayscale</button>
-    <button type="button" onclick="filterbank()">Filterbank TODO: Use correct filter coeffients</button>
+    <button type="button" onclick="filterbank()">Filterbank</button>
+    <br>
+    <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
+    <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
+    <br>
+    <a>g_star <input id="g_star" placeholder="0.0, 0.0, ..."></a>
+    <a>g <input id="g" placeholder="0.0, 0.0, ..."></a>
+    <br>
+    <button onclick="setFilter()">Set Filter</button>
+    <button onclick="defaultFilter()">Default Filter</button>
+    <button onclick="showCurrentFilter()">Show Current Filter</button>
+    <a id="currentFilter"></a>
     <br>
     <canvas id="canvas"></canvas>
 
@@ -19,6 +30,7 @@
         // +------------------+
         // | Global Variables |
         // +------------------+
+        // Drawing and image data handling
         var canvas = document.getElementById("canvas");
         var ctx = canvas.getContext("2d");
         var img = new Image();
@@ -26,24 +38,16 @@
         var imageData;
         var grayValues = [];
         // Filters
-        // TODO: Set the right filters values
         var h_star = [0.6830127, 1.1830127, 0.3169873, -0.1830127];
         var g_star = [-0.1830127, 0.3169873, 1.1830127, 0.6830127];
         var h = [0.6830127, -1.1830127, -0.3169873, 0.1830127];
         var g = [0.1830127, 0.3169873, 1.1830127, 0.6830127];
-        
+
         /*
         var h_star = [0.332670552950957, 0.806891509313339, 0.459877502119331, -0.135011020010391, -0.0854412738822415, 0.0352262918821007];
         var g_star = [0.0352262918821007, 0.0854412738822415, -0.135011020010391, -0.459877502119331, 0.806891509313339, -0.332670552950957];
         var h = [0.0352262918821007, -0.0854412738822415, -0.135011020010391, 0.459877502119331, 0.806891509313339, 0.332670552950957];
         var g = [-0.332670552950957, 0.806891509313339, -0.459877502119331, -0.135011020010391, 0.0854412738822415, 0.0352262918821007];
-        */
-        
-        /*
-        var h_star = [0.7, 0.7];
-        var g_star = [0.7, 0.7];
-        var h = [0.7, -0.7];
-        var g = [-0.7, 0.7];
         */
 
         // +-----------+
@@ -151,6 +155,29 @@
             }
             // Use the grayvalues array to set the image data
             setGrayValues();
+        };
+
+        function setFilter() {
+            try {
+                h_star = JSON.parse("[" + document.getElementById("h_star").value + "]");
+                g_star = JSON.parse("[" + document.getElementById("g_star").value + "]");
+                h = JSON.parse("[" + document.getElementById("h").value + "]");
+                g = JSON.parse("[" + document.getElementById("g").value + "]");
+            } catch {
+                alert("Bad input!");
+                defaultFilter();
+            }
+        };
+
+        function defaultFilter() {
+            h_star = [0.7, 0.7];
+            g_star = [0.7, 0.7];
+            h = [0.7, -0.7];
+            g = [-0.7, 0.7];
+        };
+
+        function showCurrentFilter() {
+            document.getElementById("currentFilter").innerHTML = "h_star: " + h_star + ", h: " + h + ", g_star: " + g_star + ", g: " + g;
         };
 
     </script>
