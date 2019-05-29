@@ -7,10 +7,10 @@
 <body style="background-color:dimgrey;">
     <input type="file" accept="image/*" onchange="loadFile(event)">
     <br>
-    <button type="button" onclick="drawImage()">Draw</button>
+    <button type="button" onclick="drawImage()">Draw Original</button>
     <button type="button" onclick="invert()">Invert</button>
-    <button type="button" onclick="filterbank()">FilterbankTodo</button>
-
+    <button type="button" onclick="grayscale()">Grayscale</button>
+    <button type="button" onclick="filterbank()">Filterbank-Todo</button>
     <br>
     <canvas id="canvas"></canvas>
 
@@ -52,27 +52,22 @@
             ctx.putImageData(imageData, 0, 0);
         };
 
-        function convertToSingleValues() {
+        function grayscale() {
             refreshData();
             for (var i = 0; i < data.length; i += 4) {
-                singleValues[i / 4] = 1000000000 * data[i] + 1000000 * data[i + 1] + 1000 * data[i + 2] + data[i + 3];
-            }
-        };
-
-        function convertToData() {
-            for (var i = 0; i < singleValues.length; i++) {
-                data[i + 3] = singleValues[i] % 1000;
-                data[i + 2] = (singleValues[i] % 1000000 - data[i + 3]) / 1000;
-                data[i + 1] = ((singleValues[i] % 1000000000 - data[i + 3]) / 1000 - data[i + 2])  / 1000;
-                data[i] = (((singleValues[i] % 1000000000 - data[i + 3]) / 1000 - data[i + 2])  / 1000 - data[i + 1]) / 1000;
+                avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = avg;
+                data[i + 1] = avg;
+                data[i + 2] = avg;
             }
             ctx.putImageData(imageData, 0, 0);
         };
 
         function filterbank() {
-            convertToSingleValues();
+            // Only use grayscaled images
+            grayscale();
             // filterbank code
-            convertToData();
+            
         };
 
     </script>
