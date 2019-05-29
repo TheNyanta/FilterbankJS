@@ -25,8 +25,6 @@
     <a id="currentFilter"></a>
     <br>
     <canvas id="canvas"></canvas>
-    <br>
-    <button onclick="openImage()">Open Image</button>
 
     <script>
         // +------------------+
@@ -180,11 +178,6 @@
 
         function showCurrentFilter() {
             document.getElementById("currentFilter").innerHTML = "h_star: " + h_star + ", h: " + h + ", g_star: " + g_star + ", g: " + g;
-        };
-
-        function openImage() {
-            var img = canvas.toDataURL("image/png");
-            document.write('<img src="' + img + '"/>');
         };
 
     </script>
