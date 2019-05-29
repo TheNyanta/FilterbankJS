@@ -25,6 +25,27 @@
         var data;
         var imageData;
         var grayValues = [];
+        // Filters
+        // TODO: Set the right filters values
+        var h_star = [0.6830127, 1.1830127, 0.3169873, -0.1830127];
+        var g_star = [-0.1830127, 0.3169873, 1.1830127, 0.6830127];
+        var h = [0.6830127, -1.1830127, -0.3169873, 0.1830127];
+        var g = [0.1830127, 0.3169873, 1.1830127, 0.6830127];
+        
+        /*
+        var h_star = [0.332670552950957, 0.806891509313339, 0.459877502119331, -0.135011020010391, -0.0854412738822415, 0.0352262918821007];
+        var g_star = [0.0352262918821007, 0.0854412738822415, -0.135011020010391, -0.459877502119331, 0.806891509313339, -0.332670552950957];
+        var h = [0.0352262918821007, -0.0854412738822415, -0.135011020010391, 0.459877502119331, 0.806891509313339, 0.332670552950957];
+        var g = [-0.332670552950957, 0.806891509313339, -0.459877502119331, -0.135011020010391, 0.0854412738822415, 0.0352262918821007];
+        */
+        
+        /*
+        var h_star = [0.7, 0.7];
+        var g_star = [0.7, 0.7];
+        var h = [0.7, -0.7];
+        var g = [-0.7, 0.7];
+        */
+
         // +-----------+
         // | Functions |
         // +-----------+
@@ -85,19 +106,6 @@
         function filterbank() {
             // Convert to grayscale and save grayvalues in an extra array
             getGrayValues();
-            // +----------------------+
-            // | Daubechies D4 Filter |
-            // +----------------------+
-            var d4 = [0.6830127, 1.1830127, 0.3169873, -0.1830127];
-            // Filters (must have same length as d4)
-            // TODO: Set the right filters values
-            var h_star = [0.6830127, 1.1830127, 0.3169873, -0.1830127];
-            var g_star = [-0.1830127, 0.3169873, 1.1830127, 0.6830127];
-            var h = [0.1830127, -0.3169873, -1.1830127, -0.6830127];
-            var g = [-0.6830127, -1.1830127, -0.3169873, 0.1830127];
-            // +-----------------+
-            // | Filterbank Code |
-            // +-----------------+
             // Apply H*, G* Filter and do downsampling 
             var lowpassDownsampled = [];
             var highpassDownsampled = [];
@@ -106,11 +114,11 @@
                 // Set to 0 so you can use "+=" for the convolusion (else you would get "NaN")
                 lowpassDownsampled[Math.floor(i / 2)] = 0;
                 highpassDownsampled[Math.floor(i / 2)] = 0;
-                for (var j = 0; j < d4.length; j++) {
+                for (var j = 0; j < h.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
                     if (i + j < grayValues.length) {
-                        lowpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * h_star[d4.length - j - 1];
-                        highpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * g_star[d4.length - j - 1];
+                        lowpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * h_star[h.length - j - 1];
+                        highpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * g_star[h.length - j - 1];
                     }
                 }
             }
@@ -129,11 +137,11 @@
             }
             // Apply H, G Filter
             for (var i = 0; i < lowpassUpsampled.length; i += 2) {
-                for (var j = 0; j < d4.length; j++) {
+                for (var j = 0; j < h.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
                     if (i + j < lowpassUpsampled.length) {
-                        lowpassUpsampled[i] += lowpassUpsampled[i + j] * h[d4.length - j - 1];
-                        highpassUpsampled[i] += highpassUpsampled[i + j] * g[d4.length - j - 1];
+                        lowpassUpsampled[i] += lowpassUpsampled[i + j] * h[h.length - j - 1];
+                        highpassUpsampled[i] += highpassUpsampled[i + j] * g[h.length - j - 1];
                     }
                 }
             }
