@@ -2,12 +2,13 @@
 
 <head>
     <title>Filterbank</title>
+    <link rel="icon" href="favicon.ico">
 </head>
 
 <body style="background-color:dimgrey;">
     <input type="file" accept="image/*" onchange="loadFile(event)">
     <br>
-    <button type="button" onclick="drawImage()">Draw Original</button>
+    <button type="button" onclick="drawOriginal()">Draw Original</button>
     <button type="button" onclick="invert()">Invert</button>
     <button type="button" onclick="grayscale()">Grayscale</button>
     <button type="button" onclick="filterbank()">Filterbank-Todo</button>
@@ -23,7 +24,7 @@
         var img = new Image();
         var data;
         var imageData;
-        var singleValues = [];
+        var grayValues = [];
         // +-----------+
         // | Functions |
         // +-----------+
@@ -31,7 +32,7 @@
             img.src = URL.createObjectURL(event.target.files[0]);
         };
 
-        function drawImage() {
+        function drawOriginal() {
             canvas.height = img.height;
             canvas.width = img.width;
             ctx.drawImage(img, 0, 0);
@@ -63,11 +64,85 @@
             ctx.putImageData(imageData, 0, 0);
         };
 
+        function getGrayValues() {
+            refreshData();
+            for (var i = 0; i < data.length; i += 4) {
+                avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                grayValues[i / 4] = avg;
+            }
+        };
+
+        function setGrayValues() {
+            for (var i = 0; i < data.length; i += 4) {
+                var gray = grayValues[i / 4]
+                data[i] = gray;
+                data[i + 1] = gray;
+                data[i + 2] = gray;
+            }
+            ctx.putImageData(imageData, 0, 0);
+        };
+
         function filterbank() {
-            // Only use grayscaled images
-            grayscale();
-            // filterbank code
-            
+            // Convert to grayscale and save grayvalues in an extra array
+            getGrayValues();
+            // +----------------------+
+            // | Daubechies D4 Filter |
+            // +----------------------+
+            var d4 = [0.6830127, 1.1830127, 0.3169873, -0.1830127];
+            // Filters (must have same length as d4)
+            // TODO: Set the right filters values
+            var h_star = [0.6830127, 1.1830127, 0.3169873, -0.1830127];
+            var g_star = [-0.1830127, 0.3169873, 1.1830127, 0.6830127];
+            var h = [0.1830127, -0.3169873, -1.1830127, -0.6830127];
+            var g = [-0.6830127, -1.1830127, -0.3169873, 0.1830127];
+            // +-----------------+
+            // | Filterbank Code |
+            // +-----------------+
+            // Apply H*, G* Filter and do downsampling 
+            var lowpassDownsampled = [];
+            var highpassDownsampled = [];
+            // Do the Convolution and downsampling together by skipping the calculation for the odd numbers which would get dropped by downsampling
+            for (var i = 0; i < grayValues.length; i += 2) {
+                // Set to 0 so you can use "+=" for the convolusion (else you would get "NaN")
+                lowpassDownsampled[Math.floor(i / 2)] = 0;
+                highpassDownsampled[Math.floor(i / 2)] = 0;
+                for (var j = 0; j < d4.length; j++) {
+                    // Prevent out of bounds, no need for an "else" because it would be 0
+                    if (i + j < grayValues.length) {
+                        lowpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * h_star[d4.length - j - 1];
+                        highpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * g_star[d4.length - j - 1];
+                    }
+                }
+            }
+            // Upsampling
+            var lowpassUpsampled = [];
+            var highpassUpsampled = [];
+            for (var i = 0; i < grayValues.length; i++) {
+                if (i % 2 == 0) {
+                    lowpassUpsampled[i] = lowpassDownsampled[Math.floor(i / 2)];
+                    highpassUpsampled[i] = highpassDownsampled[Math.floor(i / 2)];
+                } else {
+                    // Fill in zeros at odd indices
+                    lowpassUpsampled[i] = 0;
+                    highpassUpsampled[i] = 0;
+                }
+            }
+            // Apply H, G Filter
+            for (var i = 0; i < lowpassUpsampled.length; i += 2) {
+                for (var j = 0; j < d4.length; j++) {
+                    // Prevent out of bounds, no need for an "else" because it would be 0
+                    if (i + j < lowpassUpsampled.length) {
+                        lowpassUpsampled[i] += lowpassUpsampled[i + j] * h[d4.length - j - 1];
+                        highpassUpsampled[i] += highpassUpsampled[i + j] * g[d4.length - j - 1];
+                    }
+                }
+            }
+            // Add the lowpass and highpass together
+            for (var i = 0; i < lowpassUpsampled.length; i++) {
+                grayValues[i] = lowpassUpsampled[i] + highpassUpsampled[i];
+            }
+            // Use the grayvalues array to set the image data
+            setGrayValues();
         };
 
     </script>
