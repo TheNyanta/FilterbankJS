@@ -1,7 +1,7 @@
 # FilterbankJS
 https://thenyanta.github.io/FilterbankJS/
 
-[logo]: diagramm.png "Diagramm"
+[logo]: https://github.com/TheNyanta/FilterbankJS/raw/master/diagramm.png "Diagramm"
 
 ### For wavelet coefficents:
 
