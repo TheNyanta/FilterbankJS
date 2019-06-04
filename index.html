@@ -12,7 +12,6 @@
     <button type="button" onclick="invert()">Invert</button>
     <button type="button" onclick="grayscale()">Grayscale</button>
     <button type="button" onclick="filterbank()">Filterbank</button>
-    <button type="button" onclick="filterbank2()">Filterbank2</button>
     <br>
     <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
     <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
@@ -146,53 +145,6 @@
             // Add the lowpass and highpass together
             for (var i = 0; i < lowpassUpsampled.length; i++) {
                 grayValues[i] = lowpassUpsampled[i] + highpassUpsampled[i];
-            }
-            // Use the grayvalues array to set the image data
-            setGrayValues();
-        };
-        
-        function filterbank2() {
-            // Convert to grayscale and save grayvalues in an extra array
-            getGrayValues();
-            // Apply H*, G* Filter
-            var lowpass = [];
-            var highpass = [];
-            // Do the Convolution
-            for (var i = 0; i < grayValues.length; i++) {
-                // Set to 0 so you can use "+=" for the convolusion (else you would get "NaN")
-                lowpass[i] = 0;
-                highpass[i] = 0;
-                for (var j = 0; j < h.length; j++) {
-                    // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < grayValues.length) {
-                        lowpass[i] += grayValues[i + j] * h_star[h.length - j - 1];
-                        highpass[i] += grayValues[i + j] * g_star[h.length - j - 1];
-                    }
-                }
-            }
-            // Downsample & Upsample by setting odd indices to zero
-            var lowpass2 = [];
-            var highpass2 = [];
-            for (var i = 0; i < grayValues.length; i++) {
-                if (i % 2 == 1) {
-                    // Fill in zeros at odd indices
-                    lowpass2[i] = 0;
-                    highpass2[i] = 0;
-                }
-            }
-            // Apply H, G Filter
-            for (var i = 0; i < lowpass2.length; i ++) {
-                for (var j = 0; j < h.length; j++) {
-                    // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < lowpass2.length) {
-                        lowpass2[i] += lowpass2[i + j] * h[h.length - j - 1];
-                        highpass2[i] += highpass2[i + j] * g[h.length - j - 1];
-                    }
-                }
-            }
-            // Add the lowpass and highpass together
-            for (var i = 0; i < lowpass2.length; i++) {
-                grayValues[i] = lowpass2[i] + highpass2[i];
             }
             // Use the grayvalues array to set the image data
             setGrayValues();
