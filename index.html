@@ -13,7 +13,7 @@
     <button type="button" onclick="grayscale()">Grayscale</button>
     <button type="button" onclick="filterbank()">Filterbank</button>
     <button type="button" onclick="filterbank2()">Filterbank2</button>
-    <button type="button" onclick="rotateCanvas()">Rotate</button>
+    <!--<button type="button" onclick="rotateCanvas()">Rotate</button>-->
     <br>
     <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
     <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
@@ -57,7 +57,7 @@
             canvas.width = img.width;
             ctx.drawImage(img, 0, 0);
         };
-        
+        /*
         function rotateCanvas() {
             canvas.width = img.height;
             canvas.height = img.width;
@@ -65,7 +65,7 @@
             ctx.rotate(90 * Math.PI / 180);
             ctx.drawImage(img, 0,0);
             ctx.restore();
-        };
+        };*/
 
         function refreshData() {
             imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
