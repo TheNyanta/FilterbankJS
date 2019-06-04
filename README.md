@@ -1,6 +1,6 @@
 # FilterbankJS
 https://thenyanta.github.io/FilterbankJS/
 
-For wavelet coefficents:
+### For wavelet coefficents:
 
 http://wavelets.pybytes.com/
