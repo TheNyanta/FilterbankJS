@@ -256,7 +256,7 @@
          * Convolution
          */
         function convolve(values, filter) {
-            var result = [];//new Uint16Array(values.length);
+            var result = []; //new Uint16Array(values.length);
             for (var i = 0; i < values.length; i++) {
                 result[i] = 0;
                 for (var j = 0; j < filter.length; j++) {
@@ -342,69 +342,37 @@
             var width = canvas.width;
             var height = canvas.height;
 
-            var redRows = getRows(red, width, height);
-            var greenRows = getRows(green, width, height);
-            var blueRows = getRows(blue, width, height);
+            var lowpassRed = [];
+            var lowpassGreen = [];
+            var lowpassBlue = [];
 
-            var redCols = getCols(red, width, height);
-            var greenCols = getCols(green, width, height);
-            var blueCols = getCols(blue, width, height);
+            var highpassRed = [];
+            var highpassGreen = [];
+            var highpassBlue = [];
 
-            var lowpassRedRows = [];
-            var lowpassRedCols = [];
-            var lowpassGreenRows = [];
-            var lowpassGreenCols = [];
-            var lowpassBlueRows = [];
-            var lowpassBlueCols = [];
-
-            var highpassRedRows = [];
-            var highpassRedCols = [];
-            var highpassGreenRows = [];
-            var highpassGreenCols = [];
-            var highpassBlueRows = [];
-            var highpassBlueCols = [];
-
-            for (var i = 0; i < redRows.length; i++) {
-                lowpassRedRows[i] = convolve(redRows[i], h_star);
-                lowpassGreenRows[i] = convolve(greenRows[i], h_star);
-                lowpassBlueRows[i] = convolve(blueRows[i], h_star);
-                highpassRedRows[i] = convolve(redRows[i], g_star);
-                highpassGreenRows[i] = convolve(greenRows[i], g_star);
-                highpassBlueRows[i] = convolve(blueRows[i], g_star);
+            for (var i = 0; i < red.length; i++) {
+                lowpassRed[i] = convolve(red, h_star);
+                lowpassGreen[i] = convolve(green, h_star);
+                lowpassBlue[i] = convolve(blue, h_star);
+                highpassRed[i] = convolve(red, g_star);
+                highpassGreen[i] = convolve(green, g_star);
+                highpassBlue[i] = convolve(blue, g_star);
             }
 
-            for (var i = 0; i < redCols.length; i++) {
-                lowpassRedCols[i] = convolve(redCols[i], h_star);
-                lowpassGreenCols[i] = convolve(greenCols[i], h_star);
-                lowpassBlueCols[i] = convolve(blueCols[i], h_star);
-                highpassRedCols[i] = convolve(redCols[i], g_star);
-                highpassGreenCols[i] = convolve(greenCols[i], g_star);
-                highpassBlueCols[i] = convolve(blueCols[i], g_star);
-            }
-
-            for (var i = 0; i < redRows.length; i++) {
-                lowpassRedRows[i] = convolve(lowpassRedRows[i], h);
-                lowpassGreenRows[i] = convolve(lowpassGreenRows[i], h);
-                lowpassBlueRows[i] = convolve(lowpassBlueRows[i], h);
-                highpassRedRows[i] = convolve(highpassRedRows[i], g);
-                highpassGreenRows[i] = convolve(highpassGreenRows[i], g);
-                highpassBlueRows[i] = convolve(highpassBlueRows[i], g);
-            }
-
-            for (var i = 0; i < redCols.length; i++) {
-                lowpassRedCols[i] = convolve(lowpassRedCols[i], h);
-                lowpassGreenCols[i] = convolve(lowpassGreenCols[i], h);
-                lowpassBlueCols[i] = convolve(lowpassBlueCols[i], h);
-                highpassRedCols[i] = convolve(highpassRedCols[i], g);
-                highpassGreenCols[i] = convolve(highpassGreenCols[i], g);
-                highpassBlueCols[i] = convolve(highpassBlueCols[i], g);
+            for (var i = 0; i < red.length; i++) {
+                lowpassRed[i] = convolve(lowpassRed[i], h);
+                lowpassGreen[i] = convolve(lowpassGreen[i], h);
+                lowpassBlue[i] = convolve(lowpassBlue[i], h);
+                highpassRed[i] = convolve(highpassRed[i], g);
+                highpassGreen[i] = convolve(highpassGreen[i], g);
+                highpassBlue[i] = convolve(highpassBlue[i], g);
             }
 
             for (var i = 0; i < height; i++) {
                 for (var j = 0; j < width; j++) {
-                    red[i * width + j] = (lowpassRedRows[i][j] + highpassRedRows[i][j] + lowpassRedCols[j][i] + highpassRedCols[j][i]) % 256;
-                    green[i * width + j] = (lowpassGreenRows[i][j] + highpassGreenRows[i][j] + lowpassGreenCols[j][i] + highpassGreenCols[j][i]) % 256;
-                    blue[i * width + j] = (lowpassBlueRows[i][j] + highpassBlueRows[i][j] + lowpassBlueCols[j][i] + highpassBlueCols[j][i]) % 256;
+                    red[i * width + j] = lowpassRed[i][j] + highpassRed[i][j];
+                    green[i * width + j] = lowpassGreen[i][j] + highpassGreen[i][j];
+                    blue[i * width + j] = lowpassBlue[i][j] + highpassBlue[i][j];
                 }
             }
 
@@ -427,6 +395,8 @@
             for (var i = 0; i < lowpass.length; i++) {
                 gray[i] = (lowpass[i] + highpass[i]);
             }
+            // Undo the "-1" time delay
+            gray.unshift(gray.pop());
             // Use the grayvalues array to set the image data
             setGrayValues(gray);
         };
