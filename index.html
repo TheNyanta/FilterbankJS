@@ -160,6 +160,36 @@
             }
             ctx.putImageData(imageData, 0, 0);
         };
+        
+        function getRows(values, width, height) {
+            // Init row array
+            var rows = [];
+            for (var i = 0; i < height; i++) {
+                rows[i] = [];
+            }
+            // Set the values
+            for (var i = 0; i < width; i++) {
+                for (var j = 0; j < height; j++) {
+                    rows[i][j] = values[j + i * width];
+                }
+            }
+            return rows;
+        };
+        
+        function getCols(values, width, height) {
+            // Init column array
+            var cols = [];
+            for (var i = 0; i < width; i++) {
+                cols[i] = [];
+            }
+            // Set the values
+            for (var i = 0; i < width; i++) {
+                for (var j = 0; j < height; j++) {
+                    cols[i][j] = values[i + j * width];
+                }
+            }
+            return cols;
+        };
 
         function convolve(values, filter) {
             var result = new Uint16Array(values.length);
