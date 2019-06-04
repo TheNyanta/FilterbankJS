@@ -184,6 +184,15 @@
                 }
             }
         };
+        
+        function upsample (values) {
+            for (var i = 0; i < values.length; i++) {
+                if (i % 2 == 1) {
+                    values[i] = 0;
+                }
+            }
+            return values;
+        }
 
         function filterbank() {
             // Convert to grayscale and save grayvalues in an extra array
