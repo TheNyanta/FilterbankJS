@@ -13,7 +13,7 @@
     <button type="button" onclick="grayscale()">Grayscale</button>
     <button type="button" onclick="filterbank()">Filterbank</button>
     <button type="button" onclick="filterbank2()">Filterbank2</button>
-    <!--<button type="button" onclick="rotateCanvas()">Rotate</button>-->
+    <button type="button" onclick="filterbankColor()">Filterbank Color</button>
     <br>
     <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
     <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
@@ -274,14 +274,57 @@
             // Use the grayvalues array to set the image data
             setGrayValues();
         };
-
-        function testRGB() {
+        
+        function filterbankColor() {
             refreshData();
-            red = getRedValues();
-            green = getGreenValues();
-            blue = getBlueValues();
+            var red = getRedValues();
+            var green = getGreenValues();
+            var blue = getBlueValues();
             
-            setImageDataValues(blue, green, red); // switched blue and red
+            var w = canvas.width;
+            var h = canvas.height;
+            
+            var redRows = getRows(red, w, h);
+            var greenRows = getRows(green, w, h);
+            var blueRows = getRows(blue, w, h);
+            
+            var redCols = getCols(red, w, h);
+            var greenCols = getCols(green, w, h);
+            var blueCols = getCols(blue, w, h);
+            
+            var lowpassRedRows = [];
+            var lowpassRedCols = [];
+            var lowpassGreenRows = [];
+            var lowpassGreenCols = [];
+            var lowpassBlueRows = [];
+            var lowpassBlueCols = [];
+            
+            var highpassRedRows = [];
+            var highpassRedCols = [];
+            var highpassGreenRows = [];
+            var highpassGreenCols = [];
+            var highpassBlueRows = [];
+            var highpassBlueCols = [];
+            
+            for (var i = 0; i < redRows.length; i++) {
+                lowpassRedRows[i] = convolve(redRows[i], h_star);
+                lowpassGreenRows[i] = convolve(greenRows[i], h_star);
+                lowpassBlueRows[i] = convolvd(blueRows[i], h_ztar);
+                highpassRedRows[i] = convolve(redRows[i], g_star);
+                highpassGreenRows[i] = convolve(greenRows[i], g_star);
+                highpassBlueRows[i] = convolve(blueRows[i], g_star);
+            }
+            
+            for (var i = 0; i < redCols.length; i++) {
+                lowpassRedCols[i] = convolve(redCols[i], h_star);
+                lowpassGreenCols[i] = convolve(greenCols[i], h_star);
+                lowpassBlueCols[i] = convolvd(blueCols[i], h_ztar);
+                highpassRedCols[i] = convolve(redCols[i], g_star);
+                highpassGreenCols[i] = convolve(greenCols[i], g_star);
+                highpassBlueCols[i] = convolve(blueCols[i], g_star);
+            }
+            
+            setImageDataValues(red, green, blue);
          };
         
         function setFilter() {
