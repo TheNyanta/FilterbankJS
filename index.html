@@ -19,7 +19,7 @@
     <button type="button" onclick="filterbank()">Filterbank</button>
     <button type="button" onclick="filterbankColor()">Filterbank Colors</button>
     <br>
-    <button type="button" onclick="filteringOnly()">Apply Filters without Down & Downsampling</button>
+    <button type="button" onclick="filteringDirect()">Filterbank Direct</button>
     <br>
     <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
     <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
@@ -55,9 +55,9 @@
         var g_star = [-0.707, 0.707];
         var h = [0.707, 0.707];
         var g = [0.707, -0.707];
-        // +-----------+
-        // | Functions |
-        // +-----------+
+        // +----------------+
+        // | MISC FUNCTIONS |
+        // +----------------+
         function loadFile(event) {
             img.src = URL.createObjectURL(event.target.files[0]);
             img.onload = function() {
@@ -133,6 +133,7 @@
                 ctx.restore();
             }
         };
+
         /*
         function rotate() {
             var tmp = new Image();
@@ -156,6 +157,29 @@
                 ctx2.restore();
             }
         };*/
+
+        function setFilter() {
+            try {
+                h_star = JSON.parse("[" + document.getElementById("h_star").value + "]");
+                g_star = JSON.parse("[" + document.getElementById("g_star").value + "]");
+                h = JSON.parse("[" + document.getElementById("h").value + "]");
+                g = JSON.parse("[" + document.getElementById("g").value + "]");
+            } catch {
+                alert("Bad input!");
+                defaultFilter();
+            }
+        };
+
+        function defaultFilter() {
+            h_star = [0.707, 0.707];
+            g_star = [-0.707, 0.707];
+            h = [0.707, 0.707];
+            g = [0.707, -0.707];
+        };
+
+        function showCurrentFilter() {
+            document.getElementById("currentFilter").innerHTML = "h_star: " + h_star + ", h: " + h + ", g_star: " + g_star + ", g: " + g;
+        };
 
         function getGrayValues() {
             gray = [];
@@ -208,38 +232,33 @@
         };
 
         function getRows(values, width, height) {
-            // Init row array
             var rows = [];
-            for (var i = 0; i < height; i++) {
-                rows[i] = [];
-            }
-            // Set the values
             for (var i = 0; i < width; i++) {
+                rows[i] = [];
                 for (var j = 0; j < height; j++) {
-                    rows[j][i] = values[j + i * width];
+                    rows[i][j] = values[j + i * width];
                 }
             }
             return rows;
         };
 
         function getCols(values, width, height) {
-            // Init column array
             var cols = [];
             for (var i = 0; i < width; i++) {
                 cols[i] = [];
-            }
-            // Set the values
-            for (var i = 0; i < width; i++) {
                 for (var j = 0; j < height; j++) {
                     cols[i][j] = values[i + j * width];
                 }
             }
             return cols;
         };
-
+        /**
+         * Convolution
+         */
         function convolve(values, filter) {
-            var result = new Uint16Array(values.length);
+            var result = [];//new Uint16Array(values.length);
             for (var i = 0; i < values.length; i++) {
+                result[i] = 0;
                 for (var j = 0; j < filter.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
                     if (i + j < values.length) {
@@ -258,6 +277,10 @@
             }
             return values;
         };
+
+        // +-------------+
+        // | FILTERBANKS |
+        // +-------------+
 
         function filterbank() {
             refreshData();
@@ -302,7 +325,8 @@
 
             for (var i = 0; i < height; i++) {
                 for (var j = 0; j < width; j++) {
-                    gray[i * width + j] = (lowpassRows[i][j] + highpassRows[i][j] + lowpassCols[j][i] + highpassCols[j][i]) % 256;
+                    gray[i * width + j] = (lowpassRows[i][j] + highpassRows[i][j] /*+ lowpassCols[j][i] + highpassCols[j][i]*/ ) % 256;
+                    // Only Rows ^= direct, so colums ^= rotated image
                 }
             }
 
@@ -386,72 +410,25 @@
 
             setRGB(red, green, blue);
         };
-        
-        function filteringOnly() {
-            // Convert to grayscale and save grayvalues in an extra array
+
+        function filteringDirect() {
             refreshData();
             var gray = getGrayValues();
             // Apply H*, G* Filter
-            var lowpass = [];
-            var highpass = [];
-            // Do the Convolution
-            for (var i = 0; i < gray.length; i++) {
-                // Set to 0 so you can use "+=" for the convolusion (else you would get "NaN")
-                lowpass[i] = 0;
-                highpass[i] = 0;
-                for (var j = 0; j < h.length; j++) {
-                    // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < gray.length) {
-                        lowpass[i] += gray[i + j] * h_star[h.length - j - 1];
-                        highpass[i] += gray[i + j] * g_star[h.length - j - 1];
-                    }
-                }
-            }
+            var lowpass = convolve(gray, h_star);
+            var highpass = convolve(gray, g_star);
+            // Down- and Upsample
+            lowpass = downAndUpsample(lowpass);
+            highpass = downAndUpsample(highpass);
             // Apply H, G Filter
-            var lowpass2 = [];
-            //var lowpass2 = downAndUpsample(lowpass);
-            var highpass2 = [];
-            //var highpass2 = downAndUpsample(highpass);
-            for (var i = 0; i < lowpass2.length; i++) {
-                lowpass2[i] = 0;
-                highpass2[i] = 0;
-                for (var j = 0; j < h.length; j++) {
-                    // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < lowpass.length) {
-                        lowpass2[i] += lowpass[i + j] * h[h.length - j - 1];
-                        highpass2[i] += highpass[i + j] * g[h.length - j - 1];
-                    }
-                }
-            }
+            lowpass = convolve(lowpass, h);
+            highpass = convolve(highpass, g);
             // Add the lowpass and highpass together
-            for (var i = 0; i < lowpass2.length; i++) {
-                gray[i] = lowpass2[i] + highpass2[i];
+            for (var i = 0; i < lowpass.length; i++) {
+                gray[i] = (lowpass[i] + highpass[i]);
             }
             // Use the grayvalues array to set the image data
             setGrayValues(gray);
-        };
-
-        function setFilter() {
-            try {
-                h_star = JSON.parse("[" + document.getElementById("h_star").value + "]");
-                g_star = JSON.parse("[" + document.getElementById("g_star").value + "]");
-                h = JSON.parse("[" + document.getElementById("h").value + "]");
-                g = JSON.parse("[" + document.getElementById("g").value + "]");
-            } catch {
-                alert("Bad input!");
-                defaultFilter();
-            }
-        };
-
-        function defaultFilter() {
-            h_star = [0.707, 0.707];
-            g_star = [-0.707, 0.707];
-            h = [0.707, 0.707];
-            g = [0.707, -0.707];
-        };
-
-        function showCurrentFilter() {
-            document.getElementById("currentFilter").innerHTML = "h_star: " + h_star + ", h: " + h + ", g_star: " + g_star + ", g: " + g;
         };
 
     </script>
