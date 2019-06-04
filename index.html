@@ -15,11 +15,13 @@
     <button type="button" onclick="filteringDirectGray()">Filterbank Direct Gray</button>
     <button type="button" onclick="filterbankDirectColor()">Filterbank Direct Colors</button>
     <br>
-    <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
-    <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
+    <a>Enter own filter coeffients (either comma or space as seperator):</a>
     <br>
-    <a>g_star <input id="g_star" placeholder="0.0, 0.0, ..."></a>
-    <a>g <input id="g" placeholder="0.0, 0.0, ..."></a>
+    <a>h_star <input id="h_star" placeholder="0.0, 0.0, ... or 0.0 0.0 ..."></a>
+    <a>h <input id="h" placeholder="0.0, 0.0, ... or 0.0 0.0 ..."></a>
+    <br>
+    <a>g_star <input id="g_star" placeholder="0.0, 0.0, ... or 0.0 0.0 ..."></a>
+    <a>g <input id="g" placeholder="0.0, 0.0, ... or 0.0 0.0 ..."></a>
     <br>
     <button onclick="setFilter()">Set Filter</button>
     <button onclick="defaultFilter()">Default Filter</button>
@@ -90,14 +92,23 @@
         };
 
         function setFilter() {
+            // Try default comma as seperator
             try {
                 h_star = JSON.parse("[" + document.getElementById("h_star").value + "]");
                 g_star = JSON.parse("[" + document.getElementById("g_star").value + "]");
                 h = JSON.parse("[" + document.getElementById("h").value + "]");
                 g = JSON.parse("[" + document.getElementById("g").value + "]");
             } catch {
-                alert("Bad input!");
-                defaultFilter();
+                // Try space as seperator
+                try {
+                    h_star = JSON.parse("[" + document.getElementById("h_star").value.replace(/ /g, ', ') + "]");
+                    g_star = JSON.parse("[" + document.getElementById("g_star").value.replace(/ /g, ', ') + "]");
+                    h = JSON.parse("[" + document.getElementById("h").value.replace(/ /g, ', ') + "]");
+                    g = JSON.parse("[" + document.getElementById("g").value.replace(/ /g, ', ') + "]");
+                } catch {
+                    alert("Bad input!");
+                    defaultFilter();
+                }
             }
         };
 
