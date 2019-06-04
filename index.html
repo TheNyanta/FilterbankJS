@@ -140,7 +140,7 @@
                 }
             }
             // Apply H, G Filter
-            for (var i = 0; i < lowpassUpsampled.length; i += 2) {
+            for (var i = 0; i < lowpassUpsampled.length; i++) {
                 for (var j = 0; j < h.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
                     if (i + j < lowpassUpsampled.length) {
