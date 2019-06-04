@@ -59,12 +59,12 @@
         };
         
         function rotateCanvas() {
-            var height = canvas.height;
-            var width = canvas.width;
+            //var height = canvas.height;
+            //var width = canvas.width;
             //canvas.width = Math.max(height, width);
             //canvas.height = Math.max(height, width);
-            canvas.width = height;
-            canvas.height = width;
+            //canvas.width = height;
+            //canvas.height = width;
             ctx.rotate(90 * Math.PI / 180);
             ctx.drawImage(img, 0,0);
         };
