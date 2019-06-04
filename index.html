@@ -143,6 +143,23 @@
             ctx.putImageData(imageData, 0, 0);
         };
         
+        function getCols(values, width, height) {
+            // Init column array
+            var cols = [];
+            for (var i = 0; i < width; i++) {
+                cols[i] = [];
+            }
+            // Set the values
+            for (var i = 0; i < width; i++) {
+                for (var j = 0; j < height; j++) {
+                    cols[i][j] = values[i + j * width];
+                }
+            }
+            return cols;
+        };
+            
+        };
+        
         function convolve(signal, filter) {
             var result = [];
             for (var i = 0; i < signal.length; i++) {
