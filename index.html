@@ -11,9 +11,9 @@
     <button type="button" onclick="drawOriginal()">Draw Original</button>
     <button type="button" onclick="invert()">Invert</button>
     <button type="button" onclick="grayscale()">Grayscale</button>
+    <button type="button" onclick="rotate()">Rotate</button>
     <button type="button" onclick="filterbank()">Filterbank</button>
     <button type="button" onclick="filterbank2()">Filterbank2</button>
-    <button type="button" onclick="filterbankColor()">Filterbank Color</button>
     <br>
     <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
     <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
@@ -38,18 +38,20 @@
         var img = new Image();
         var data;
         var imageData;
-        var grayValues = [];//new Uint8ClampedArray();
-        // Filters
+        // Default Filter (Haar: 1 / Math.sqrt(2))
         var h_star = [0.707, 0.707];
         var g_star = [-0.707, 0.707];
         var h = [0.707, 0.707];
         var g = [0.707, -0.707];
-        
+
         // +-----------+
         // | Functions |
         // +-----------+
         function loadFile(event) {
             img.src = URL.createObjectURL(event.target.files[0]);
+            img.onload = function() {
+                drawOriginal();
+            }
         };
 
         function drawOriginal() {
@@ -57,15 +59,6 @@
             canvas.width = img.width;
             ctx.drawImage(img, 0, 0);
         };
-        /*
-        function rotateCanvas() {
-            canvas.width = img.height;
-            canvas.height = img.width;
-            ctx.save();
-            ctx.rotate(90 * Math.PI / 180);
-            ctx.drawImage(img, 0,0);
-            ctx.restore();
-        };*/
 
         function refreshData() {
             imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -93,13 +86,38 @@
             ctx.putImageData(imageData, 0, 0);
         };
 
-        function getGrayValues() {
-            for (var i = 0; i < data.length; i += 4) {
-                avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                grayValues[i / 4] = avg;
-            }
+        function rotate() {
+            var tmp = new Image();
+            tmp.src = canvas.toDataURL();
+            var x = canvas.width / 2;
+            var y = canvas.height / 2;
+            var width = tmp.width;
+            var height = tmp.height;
+
+            ctx.translate(x, y);
+            ctx.rotate(Math.PI * 90 / 180);
+            ctx.drawImage(tmp, -width / 2, -height / 2, width, height);
+            ctx.rotate(-Math.PI * 90 / 180);
+            ctx.translate(-x, -y);
         };
-        
+
+        function getGrayValues() {
+            gray = [];
+            for (var i = 0; i < data.length; i += 4) {
+                gray[i / 4] = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            }
+            return gray;
+        };
+
+        function setGrayValues(gray) {
+            for (var i = 0; i < data.length; i += 4) {
+                data[i] = gray[i / 4];
+                data[i + 1] = gray[i / 4];
+                data[i + 2] = gray[i / 4];
+            }
+            ctx.putImageData(imageData, 0, 0);
+        };
+
         function getRedValues() {
             red = [];
             for (var i = 0; i < data.length; i += 4) {
@@ -107,167 +125,144 @@
             }
             return red;
         };
-        
+
         function getGreenValues() {
             green = [];
             for (var i = 0; i < data.length; i += 4) {
-                green[i / 4] = data[i+1];
+                green[i / 4] = data[i + 1];
             }
             return green;
         };
-        
+
         function getBlueValues() {
             blue = [];
             for (var i = 0; i < data.length; i += 4) {
                 blue[i / 4] = data[i];
             }
             return blue;
-        };        
-      
-        function setGrayValues() {
+        };
+
+        function setRGB(red, green, blue) {
             for (var i = 0; i < data.length; i += 4) {
-                var gray = grayValues[i / 4]
-                data[i] = gray;
-                data[i + 1] = gray;
-                data[i + 2] = gray;
+                data[i] = red[i / 4];
+                data[i + 1] = green[i / 4];
+                data[i + 2] = blue[i / 4];
             }
             ctx.putImageData(imageData, 0, 0);
         };
-        
-        function setImageDataValues(red, green, blue) {
-            for (var i = 0; i < data.length; i += 4) {
-                data[i] = red[i/4];
-                data[i + 1] = green[i/4];
-                data[i + 2] = blue[i/4];
-            }
-            ctx.putImageData(imageData, 0, 0);
-        };
-        
-        function getCols(values, width, height) {
-            // Init column array
-            var cols = [];
-            for (var i = 0; i < width; i++) {
-                cols[i] = [];
-            }
-            // Set the values
-            for (var i = 0; i < width; i++) {
-                for (var j = 0; j < height; j++) {
-                    cols[i][j] = values[i + j * width];
-                }
-            }
-            return cols;
-        };
-        
-        function getRows(values, width, height) {
-            // Init row array
-            var rows = [];
-            for (var i = 0; i < height; i++) {
-                rows[i] = [];
-            }
-            // Set the values
-            for (var i = 0; i < width; i++) {
-                for (var j = 0; j < height; j++) {
-                    rows[i][j] = values[j + i * width];
-                }
-            }
-            return rows;
-        };
-        
-        function convolve(signal, filter) {
-            var result = [];
-            for (var i = 0; i < signal.length; i++) {
+
+        function convolve(values, filter) {
+            var result = new Uint16Array(values.length);
+            for (var i = 0; i < values.length; i++) {
                 for (var j = 0; j < filter.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < signal.length) {
-                        result[i] += signal[i + j] * filter[filter.length-1 - j];
+                    if (i + j < values.length) {
+                        result[i] += values[i + j] * filter[filter.length - 1 - j];
                     }
                 }
             }
+            return result;
         };
-        
-        function upsample (values) {
+
+        function downAndUpsample(values) {
             for (var i = 0; i < values.length; i++) {
                 if (i % 2 == 1) {
                     values[i] = 0;
                 }
             }
             return values;
-        }
+        };
 
         function filterbank() {
-            // Convert to grayscale and save grayvalues in an extra array
             refreshData();
-            getGrayValues();
-            // Apply H*, G* Filter and do downsampling 
-            var lowpassDownsampled = [];
-            var highpassDownsampled = [];
-            // Do the Convolution and downsampling together by skipping the calculation for the odd numbers which would get dropped by downsampling
-            for (var i = 0; i < grayValues.length; i += 2) {
-                // Set to 0 so you can use "+=" for the convolusion (else you would get "NaN")
-                lowpassDownsampled[Math.floor(i / 2)] = 0;
-                highpassDownsampled[Math.floor(i / 2)] = 0;
-                for (var j = 0; j < h.length; j++) {
-                    // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < grayValues.length) {
-                        lowpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * h_star[h.length - j - 1];
-                        highpassDownsampled[Math.floor(i / 2)] += grayValues[i + j] * g_star[h.length - j - 1];
-                    }
+            var gray = getGrayValues();
+
+            var width = canvas.width;
+            var height = canvas.height;
+
+            var rows = getRows(gray, width, height);
+            var cols = getCols(gray, width, height);
+
+            var lowpassRows = [];
+            var lowpassCols = [];
+            var highpassRows = [];
+            var highpassCols = [];
+
+            for (var i = 0; i < rows.length; i++) {
+                lowpassRows[i] = convolve(rows[i], h_star);
+                highpassRows[i] = convolve(rows[i], g_star);
+            }
+
+            for (var i = 0; i < cols.length; i++) {
+                lowpassCols[i] = convolve(cols[i], h_star);
+                highpassCols[i] = convolve(cols[i], g_star);
+            }
+            /*
+            lowpassRows = downAndUpsample(lowpassRows);
+            lowpassCols = downAndUpsample(lowpassCols);
+            highpassRows = downAndUpsample(highpassRows);
+            highpassCols = downAndUpsample(highpassCols);
+            */
+
+            for (var i = 0; i < rows.length; i++) {
+                lowpassRows[i] = convolve(lowpassRows[i], h);
+                highpassRows[i] = convolve(highpassRows[i], g);
+            }
+
+            for (var i = 0; i < cols.length; i++) {
+                lowpassCols[i] = convolve(lowpassCols[i], h);
+                highpassCols[i] = convolve(highpassCols[i], g);
+            }
+            /*
+
+                        console.log(lowpassRows)
+                        console.log(lowpassCols)
+                        console.log(highpassRows)
+                        console.log(highpassCols)
+                        
+                        console.log(gray.length % width)
+                        console.log(Math.floor(gray.length / width))
+
+                        /*
+                        for (var i = 0; i < gray.length; i++) {
+                            var x = i % width;
+                            var y = Math.floor(i / width);
+                            gray[i] = lowpassRows[x][y] + highpassRows[x][y]; //+ lowpassCols[y][x] + highpassCols[y][x];
+                        }*/
+
+            for (var i = 0; i < height; i++) {
+                for (var j = 0; j < width; j++) {
+                    gray[i * width + j] = lowpassRows[i][j] + highpassRows[i][j] // + lowpassCols[j][i] + highpassCols[j][i];
                 }
             }
-            // Upsampling
-            var lowpassUpsampled = [];
-            var highpassUpsampled = [];
-            for (var i = 0; i < grayValues.length; i++) {
-                if (i % 2 == 0) {
-                    lowpassUpsampled[i] = lowpassDownsampled[Math.floor(i / 2)];
-                    highpassUpsampled[i] = highpassDownsampled[Math.floor(i / 2)];
-                } else {
-                    // Fill in zeros at odd indices
-                    lowpassUpsampled[i] = 0;
-                    highpassUpsampled[i] = 0;
-                }
-            }
-            // Apply H, G Filter
-            for (var i = 0; i < lowpassUpsampled.length; i++) {
-                for (var j = 0; j < h.length; j++) {
-                    // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < lowpassUpsampled.length) {
-                        lowpassUpsampled[i] += lowpassUpsampled[i + j] * h[h.length - j - 1];
-                        highpassUpsampled[i] += highpassUpsampled[i + j] * g[h.length - j - 1];
-                    }
-                }
-            }
-            // Add the lowpass and highpass together
-            for (var i = 0; i < lowpassUpsampled.length; i++) {
-                grayValues[i] = lowpassUpsampled[i] + highpassUpsampled[i];
-            }
-            // Use the grayvalues array to set the image data
-            setGrayValues();
+
+            setGrayValues(gray);
         };
+
         function filterbank2() {
             // Convert to grayscale and save grayvalues in an extra array
             refreshData();
-            getGrayValues();
+            var gray = getGrayValues();
             // Apply H*, G* Filter
             var lowpass = [];
             var highpass = [];
             // Do the Convolution
-            for (var i = 0; i < grayValues.length; i++) {
+            for (var i = 0; i < gray.length; i++) {
                 // Set to 0 so you can use "+=" for the convolusion (else you would get "NaN")
                 lowpass[i] = 0;
                 highpass[i] = 0;
                 for (var j = 0; j < h.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < grayValues.length) {
-                        lowpass[i] += grayValues[i + j] * h_star[h.length - j - 1];
-                        highpass[i] += grayValues[i + j] * g_star[h.length - j - 1];
+                    if (i + j < gray.length) {
+                        lowpass[i] += gray[i + j] * h_star[h.length - j - 1];
+                        highpass[i] += gray[i + j] * g_star[h.length - j - 1];
                     }
                 }
             }
             // Apply H, G Filter
             var lowpass2 = [];
             var highpass2 = [];
-            for (var i = 0; i < lowpass2.length; i ++) {
+            for (var i = 0; i < lowpass2.length; i++) {
                 for (var j = 0; j < h.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
                     if (i + j < lowpass2.length) {
@@ -278,86 +273,87 @@
             }
             // Add the lowpass and highpass together
             for (var i = 0; i < lowpass2.length; i++) {
-                grayValues[i] = lowpass2[i] + highpass2[i];
+                gray[i] = lowpass2[i] + highpass2[i];
             }
             // Use the grayvalues array to set the image data
-            setGrayValues();
+            setGrayValues(gray);
         };
-        
+
         function filterbankColor() {
             refreshData();
             var red = getRedValues();
             var green = getGreenValues();
             var blue = getBlueValues();
-            
+
             var w = canvas.width;
             var height = canvas.height;
-            
+
             var redRows = getRows(red, w, height);
             var greenRows = getRows(green, w, height);
             var blueRows = getRows(blue, w, height);
-            
+
             var redCols = getCols(red, w, height);
             var greenCols = getCols(green, w, height);
             var blueCols = getCols(blue, w, height);
-            
+
             var lowpassRedRows = [];
             var lowpassRedCols = [];
             var lowpassGreenRows = [];
             var lowpassGreenCols = [];
             var lowpassBlueRows = [];
             var lowpassBlueCols = [];
-            
+
             var highpassRedRows = [];
             var highpassRedCols = [];
             var highpassGreenRows = [];
             var highpassGreenCols = [];
             var highpassBlueRows = [];
             var highpassBlueCols = [];
-            
+
             for (var i = 0; i < redRows.length; i++) {
                 lowpassRedRows[i] = convolve(redRows[i], h_star);
                 lowpassGreenRows[i] = convolve(greenRows[i], h_star);
-                lowpassBlueRows[i] = convolvd(blueRows[i], h_ztar);
+                lowpassBlueRows[i] = convolve(blueRows[i], h_star);
                 highpassRedRows[i] = convolve(redRows[i], g_star);
                 highpassGreenRows[i] = convolve(greenRows[i], g_star);
                 highpassBlueRows[i] = convolve(blueRows[i], g_star);
             }
-            
+
             for (var i = 0; i < redCols.length; i++) {
                 lowpassRedCols[i] = convolve(redCols[i], h_star);
                 lowpassGreenCols[i] = convolve(greenCols[i], h_star);
-                lowpassBlueCols[i] = convolvd(blueCols[i], h_star);
+                lowpassBlueCols[i] = convolve(blueCols[i], h_star);
                 highpassRedCols[i] = convolve(redCols[i], g_star);
                 highpassGreenCols[i] = convolve(greenCols[i], g_star);
                 highpassBlueCols[i] = convolve(blueCols[i], g_star);
             }
-            
+
             for (var i = 0; i < redRows.length; i++) {
                 lowpassRedRows[i] = convolve(lowpassRedRows[i], h);
                 lowpassGreenRows[i] = convolve(lowpassGreenRows[i], h);
-                lowpassBlueRows[i] = convolvd(lowpassBlueRows[i], h);
+                lowpassBlueRows[i] = convolve(lowpassBlueRows[i], h);
                 highpassRedRows[i] = convolve(highpassRedRows[i], g);
                 highpassGreenRows[i] = convolve(highpassGreenRows[i], g);
                 highpassBlueRows[i] = convolve(highpassBlueRows[i], g);
             }
-            
+
             for (var i = 0; i < redCols.length; i++) {
                 lowpassRedCols[i] = convolve(lowpassRedCols[i], h);
                 lowpassGreenCols[i] = convolve(lowpassGreenCols[i], h);
-                lowpassBlueCols[i] = convolvd(lowpassBlueCols[i], h);
+                lowpassBlueCols[i] = convolve(lowpassBlueCols[i], h);
                 highpassRedCols[i] = convolve(highpassRedCols[i], g);
                 highpassGreenCols[i] = convolve(highpassGreenCols[i], g);
                 highpassBlueCols[i] = convolve(highpassBlueCols[i], g);
             }
-            
+            /* TODO: Fix
             red = lowpassRedRows + highpassRedRows + lowpassRedCols + highpassRedCols;
             green = lowpassGreenRows + highpassGreenRows + lowpassGreenCols + highpassGreenCols;
             blue = lowpassBlueRows + highpassBlueRows + lowpassBlueCols + highpassBlueCols;
-            
-            setImageDataValues(red, green, blue);
-         };
-        
+            */
+
+            setRGB(red, green, blue);
+        };
+
         function setFilter() {
             try {
                 h_star = JSON.parse("[" + document.getElementById("h_star").value + "]");
