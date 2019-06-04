@@ -133,6 +133,18 @@
             }
             ctx.putImageData(imageData, 0, 0);
         };
+        
+        function convolve(signal, filter) {
+            var result = [];
+            for (var i = 0; i < signal.length; i++) {
+                for (var j = 0; j < filter.length; j++) {
+                    // Prevent out of bounds, no need for an "else" because it would be 0
+                    if (i + j < signal.length) {
+                        result[i] += signal[i + j] * filter[filter.length-1 - j];
+                    }
+                }
+            }
+        };
 
         function filterbank() {
             // Convert to grayscale and save grayvalues in an extra array
