@@ -157,7 +157,20 @@
             }
             return cols;
         };
-            
+        
+        function getRows(values, width, height) {
+            // Init row array
+            var rows = [];
+            for (var i = 0; i < height; i++) {
+                rows[i] = [];
+            }
+            // Set the values
+            for (var i = 0; i < width; i++) {
+                for (var j = 0; j < height; j++) {
+                    rows[i][j] = values[j + i * width];
+                }
+            }
+            return rows;
         };
         
         function convolve(signal, filter) {
