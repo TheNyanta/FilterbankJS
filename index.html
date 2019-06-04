@@ -13,6 +13,7 @@
     <button type="button" onclick="grayscale()">Grayscale</button>
     <button type="button" onclick="filterbank()">Filterbank</button>
     <button type="button" onclick="filterbank2()">Filterbank2</button>
+    <button type="button" onclick="testRGB()">Color</button>
     <br>
     <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
     <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
@@ -84,13 +85,36 @@
         };
 
         function getGrayValues() {
-            refreshData();
             for (var i = 0; i < data.length; i += 4) {
                 avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
                 grayValues[i / 4] = avg;
             }
         };
-
+        
+        function getRedValues() {
+            red = [];
+            for (var i = 0; i < data.length; i += 4) {
+                red[i / 4] = data[i];
+            }
+            return red;
+        };
+        
+        function getGreenValues() {
+            green = [];
+            for (var i = 0; i < data.length; i += 4) {
+                green[i / 4] = data[i+1];
+            }
+            return green;
+        };
+        
+        function getBlueValues() {
+            blue = [];
+            for (var i = 0; i < data.length; i += 4) {
+                blue[i / 4] = data[i];
+            }
+            return blue;
+        };        
+      
         function setGrayValues() {
             for (var i = 0; i < data.length; i += 4) {
                 var gray = grayValues[i / 4]
@@ -100,9 +124,19 @@
             }
             ctx.putImageData(imageData, 0, 0);
         };
+        
+        function setImageDataValues(red, green, blue) {
+            for (var i = 0; i < data.length; i += 4) {
+                data[i] = red[i/4];
+                data[i + 1] = green[i/4];
+                data[i + 2] = blue[i/4];
+            }
+            ctx.putImageData(imageData, 0, 0);
+        };
 
         function filterbank() {
             // Convert to grayscale and save grayvalues in an extra array
+            refreshData();
             getGrayValues();
             // Apply H*, G* Filter and do downsampling 
             var lowpassDownsampled = [];
@@ -152,6 +186,7 @@
         };
         function filterbank2() {
             // Convert to grayscale and save grayvalues in an extra array
+            refreshData();
             getGrayValues();
             // Apply H*, G* Filter
             var lowpass = [];
@@ -189,8 +224,15 @@
             setGrayValues();
         };
 
+        function testRGB() {
+            refreshData();
+            red = getRedValues();
+            green = getGreenValues();
+            blue = getBlueValues();
+            
+            setImageDataValues(blue, green, red); // switched blue and red
+         };
         
-
         function setFilter() {
             try {
                 h_star = JSON.parse("[" + document.getElementById("h_star").value + "]");
