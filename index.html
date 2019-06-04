@@ -65,8 +65,10 @@
             //canvas.height = Math.max(height, width);
             //canvas.width = height;
             //canvas.height = width;
+            ctx.save();
             ctx.rotate(90 * Math.PI / 180);
             ctx.drawImage(img, 0,0);
+            ctx.restore();
         };
 
         function refreshData() {
