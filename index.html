@@ -9,11 +9,17 @@
     <input type="file" accept="image/*" onchange="loadFile(event)">
     <br>
     <button type="button" onclick="drawOriginal()">Draw Original</button>
+    <button type="button" onclick="resizeSmallSquare()">Resize Small Square</button>
+    <button type="button" onclick="resizeLargeSquare()">Resize Large Square</button>
+    <br>
     <button type="button" onclick="invert()">Invert</button>
     <button type="button" onclick="grayscale()">Grayscale</button>
     <button type="button" onclick="rotate()">Rotate</button>
+    <br>
     <button type="button" onclick="filterbank()">Filterbank</button>
-    <button type="button" onclick="filterbank2()">Apply Filters without Up/Downsampling</button>
+    <button type="button" onclick="filterbankColor()">Filterbank Colors</button>
+    <br>
+    <button type="button" onclick="filterbank2()">Apply Filters without Down & Downsampling</button>
     <br>
     <a>h_star <input id="h_star" placeholder="0.0, 0.0, ..."></a>
     <a>h <input id="h" placeholder="0.0, 0.0, ..."></a>
@@ -27,6 +33,7 @@
     <a id="currentFilter"></a>
     <br>
     <canvas id="canvas"></canvas>
+    <canvas id="c2"></canvas>
 
     <script>
         // +------------------+
@@ -38,12 +45,16 @@
         var img = new Image();
         var data;
         var imageData;
-        // Default Filter (Haar: 1 / Math.sqrt(2))
+        // testing
+        var c2 = document.getElementById("c2");
+        var ctx2 = c2.getContext("2d");
+        var data2;
+        var imageData2;
+        // Default Filter (Haarfilter: 1 / Math.sqrt(2))
         var h_star = [0.707, 0.707];
         var g_star = [-0.707, 0.707];
         var h = [0.707, 0.707];
         var g = [0.707, -0.707];
-
         // +-----------+
         // | Functions |
         // +-----------+
@@ -55,16 +66,28 @@
         };
 
         function drawOriginal() {
-            // for easy mode rotation
-            max = Math.max(img.width, img.height);
-            canvas.width = max;
-            canvas.height = max;
+            canvas.width = img.width;
+            canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
         };
 
         function refreshData() {
             imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             data = imageData.data;
+        };
+
+        function resizeSmallSquare() {
+            square = Math.min(img.width, img.height);
+            canvas.width = square;
+            canvas.height = square;
+            ctx.drawImage(img, 0, 0);
+        };
+
+        function resizeLargeSquare() {
+            square = Math.max(img.width, img.height);
+            canvas.width = square;
+            canvas.height = square;
+            ctx.drawImage(img, 0, 0);
         };
 
         function invert() {
@@ -110,6 +133,29 @@
                 ctx.restore();
             }
         };
+        /*
+        function rotate() {
+            var tmp = new Image();
+            tmp.src = canvas.toDataURL();
+            tmp.onload = function() {
+                var x = canvas.width / 2;
+                var y = canvas.height / 2;
+                var width = tmp.width;
+                var height = tmp.height;
+                var c = Math.abs(Math.cos(90 * Math.PI / 180));
+                var s = Math.abs(Math.sin(90 * Math.PI / 180));
+
+                c2.width = height * s + width * c;
+                c2.height = height * c + width * s;
+
+                ctx2.clearRect(0, 0, canvas.width, canvas.height);
+                ctx2.save();
+                ctx2.translate(x, y);
+                ctx2.rotate(90 * Math.PI / 180);
+                ctx2.drawImage(tmp, -width / 2, -height / 2, width, height);
+                ctx2.restore();
+            }
+        };*/
 
         function getGrayValues() {
             gray = [];
@@ -160,7 +206,7 @@
             }
             ctx.putImageData(imageData, 0, 0);
         };
-        
+
         function getRows(values, width, height) {
             // Init row array
             var rows = [];
@@ -175,7 +221,7 @@
             }
             return rows;
         };
-        
+
         function getCols(values, width, height) {
             // Init column array
             var cols = [];
@@ -253,26 +299,10 @@
                 lowpassCols[i] = convolve(lowpassCols[i], h);
                 highpassCols[i] = convolve(highpassCols[i], g);
             }
-            /*
-
-                        console.log(lowpassRows)
-                        console.log(lowpassCols)
-                        console.log(highpassRows)
-                        console.log(highpassCols)
-                        
-                        console.log(gray.length % width)
-                        console.log(Math.floor(gray.length / width))
-
-                        /*
-                        for (var i = 0; i < gray.length; i++) {
-                            var x = i % width;
-                            var y = Math.floor(i / width);
-                            gray[i] = lowpassRows[x][y] + highpassRows[x][y]; //+ lowpassCols[y][x] + highpassCols[y][x];
-                        }*/
 
             for (var i = 0; i < height; i++) {
                 for (var j = 0; j < width; j++) {
-                    gray[i * width + j] = lowpassRows[i][j] + highpassRows[i][j] // + lowpassCols[j][i] + highpassCols[j][i];
+                    gray[i * width + j] = (lowpassRows[i][j] + highpassRows[i][j] + lowpassCols[j][i] + highpassCols[j][i]) % 256;
                 }
             }
 
@@ -301,13 +331,17 @@
             }
             // Apply H, G Filter
             var lowpass2 = [];
+            //var lowpass2 = downAndUpsample(lowpass);
             var highpass2 = [];
+            //var highpass2 = downAndUpsample(highpass);
             for (var i = 0; i < lowpass2.length; i++) {
+                lowpass2[i] = 0;
+                highpass2[i] = 0;
                 for (var j = 0; j < h.length; j++) {
                     // Prevent out of bounds, no need for an "else" because it would be 0
-                    if (i + j < lowpass2.length) {
-                        lowpass2[i] += lowpass2[i + j] * h[h.length - j - 1];
-                        highpass2[i] += highpass2[i + j] * g[h.length - j - 1];
+                    if (i + j < lowpass.length) {
+                        lowpass2[i] += lowpass[i + j] * h[h.length - j - 1];
+                        highpass2[i] += highpass[i + j] * g[h.length - j - 1];
                     }
                 }
             }
@@ -325,16 +359,16 @@
             var green = getGreenValues();
             var blue = getBlueValues();
 
-            var w = canvas.width;
+            var width = canvas.width;
             var height = canvas.height;
 
-            var redRows = getRows(red, w, height);
-            var greenRows = getRows(green, w, height);
-            var blueRows = getRows(blue, w, height);
+            var redRows = getRows(red, width, height);
+            var greenRows = getRows(green, width, height);
+            var blueRows = getRows(blue, width, height);
 
-            var redCols = getCols(red, w, height);
-            var greenCols = getCols(green, w, height);
-            var blueCols = getCols(blue, w, height);
+            var redCols = getCols(red, width, height);
+            var greenCols = getCols(green, width, height);
+            var blueCols = getCols(blue, width, height);
 
             var lowpassRedRows = [];
             var lowpassRedCols = [];
@@ -385,11 +419,14 @@
                 highpassGreenCols[i] = convolve(highpassGreenCols[i], g);
                 highpassBlueCols[i] = convolve(highpassBlueCols[i], g);
             }
-            /* TODO: Fix
-            red = lowpassRedRows + highpassRedRows + lowpassRedCols + highpassRedCols;
-            green = lowpassGreenRows + highpassGreenRows + lowpassGreenCols + highpassGreenCols;
-            blue = lowpassBlueRows + highpassBlueRows + lowpassBlueCols + highpassBlueCols;
-            */
+
+            for (var i = 0; i < height; i++) {
+                for (var j = 0; j < width; j++) {
+                    red[i * width + j] = (lowpassRedRows[i][j] + highpassRedRows[i][j] + lowpassRedCols[j][i] + highpassRedCols[j][i]) % 256;
+                    green[i * width + j] = (lowpassGreenRows[i][j] + highpassGreenRows[i][j] + lowpassGreenCols[j][i] + highpassGreenCols[j][i]) % 256;
+                    blue[i * width + j] = (lowpassBlueRows[i][j] + highpassBlueRows[i][j] + lowpassBlueCols[j][i] + highpassBlueCols[j][i]) % 256;
+                }
+            }
 
             setRGB(red, green, blue);
         };
