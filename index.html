@@ -55,8 +55,10 @@
         };
 
         function drawOriginal() {
-            canvas.height = img.height;
-            canvas.width = img.width;
+            // for easy mode rotation
+            max = Math.max(img.width, img.height);
+            canvas.width = max;
+            canvas.height = max;
             ctx.drawImage(img, 0, 0);
         };
 
@@ -89,16 +91,24 @@
         function rotate() {
             var tmp = new Image();
             tmp.src = canvas.toDataURL();
-            var x = canvas.width / 2;
-            var y = canvas.height / 2;
-            var width = tmp.width;
-            var height = tmp.height;
+            tmp.onload = function() {
+                var x = canvas.width / 2;
+                var y = canvas.height / 2;
+                var width = tmp.width;
+                var height = tmp.height;
+                var c = Math.abs(Math.cos(90 * Math.PI / 180));
+                var s = Math.abs(Math.sin(90 * Math.PI / 180));
 
-            ctx.translate(x, y);
-            ctx.rotate(Math.PI * 90 / 180);
-            ctx.drawImage(tmp, -width / 2, -height / 2, width, height);
-            ctx.rotate(-Math.PI * 90 / 180);
-            ctx.translate(-x, -y);
+                canvas.width = height * s + width * c;
+                canvas.height = height * c + width * s;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(90 * Math.PI / 180);
+                ctx.drawImage(tmp, -width / 2, -height / 2, width, height);
+                ctx.restore();
+            }
         };
 
         function getGrayValues() {
