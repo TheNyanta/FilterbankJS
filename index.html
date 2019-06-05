@@ -14,7 +14,7 @@
     <br>
     <button type="button" onclick="filterbankGray()">Filterbank Gray</button>
     <button type="button" onclick="filterbankColors()">Filterbank Colors</button>
-    <button type="button" onclick="timeShift()">Time Shift</button>
+    <button type="button" onclick="timeShift()">Undo Filters TimeShift</button>
     <br>
     <a>Enter own filter coeffients (either comma or space as seperator):</a>
     <br>
@@ -200,11 +200,11 @@
             }
             context.putImageData(tmp, 0, 0);
         };
-        
+
         function timeShift() {
             var tmp1 = reconstructCtx.getImageData(0, 0, canvas.width, canvas.height);
-            var tmp2 = lowpassCtx.getImageData(0, 0, canvas.width, canvas.height); 
-            var tmp3 = highpassCtx.getImageData(0, 0, canvas.width, canvas.height); 
+            var tmp2 = lowpassCtx.getImageData(0, 0, canvas.width, canvas.height);
+            var tmp3 = highpassCtx.getImageData(0, 0, canvas.width, canvas.height);
             red1 = [];
             green1 = [];
             blue1 = [];
@@ -225,18 +225,20 @@
                 green3[i / 4] = tmp3.data[i + 1];
                 blue3[i / 4] = tmp3.data[i + 2];
             }
-            red1.unshift(red1.pop());
-            green1.unshift(green1.pop());
-            blue1.unshift(blue1.pop());
-            red2.unshift(red2.pop());
-            green2.unshift(green2.pop());
-            blue2.unshift(blue2.pop());
-            red3.unshift(red3.pop());
-            green3.unshift(green3.pop());
-            blue3.unshift(blue3.pop());
-            drawColorData(red1, green1, blue1, reconstructCtx);            
-            drawColorData(red2, green2, blue2, lowpassCtx); 
-            drawColorData(red3, green3, blue3, highpassCtx); 
+            for (var i = 0; i < h.length - 1; i++) {
+                red1.unshift(red1.pop());
+                green1.unshift(green1.pop());
+                blue1.unshift(blue1.pop());
+                red2.unshift(red2.pop());
+                green2.unshift(green2.pop());
+                blue2.unshift(blue2.pop());
+                red3.unshift(red3.pop());
+                green3.unshift(green3.pop());
+                blue3.unshift(blue3.pop());
+            }
+            drawColorData(red1, green1, blue1, reconstructCtx);
+            drawColorData(red2, green2, blue2, lowpassCtx);
+            drawColorData(red3, green3, blue3, highpassCtx);
         };
 
         // +--------------+
@@ -251,6 +253,10 @@
                     // Prevent out of bounds, no need for an "else" because it would be 0
                     if (i + j < values.length) {
                         result[i] += values[i + j] * filter[filter.length - 1 - j];
+                    }
+                    // Use values from the start
+                    else {
+                        result[i] += values[i + j - values.length] * filter[filter.length - 1 - j];
                     }
                 }
             }
