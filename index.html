@@ -27,28 +27,32 @@
     <button onclick="defaultFilter()">Default Filter</button>
     <button onclick="showCurrentFilter()">Show Current Filter</button>
     <a id="currentFilter"></a>
+    <a href="https://github.com/TheNyanta/FilterbankJS" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://raw.githubusercontent.com/TheNyanta/FilterbankJS/master/gotosrc.png" alt="Source on GitHub" data-canonical-src="https://raw.githubusercontent.com/TheNyanta/FilterbankJS/master/gotosrc.png"></a>
     <br>
     <canvas id="canvas"></canvas>
+    <canvas id="reconstruct"></canvas>
+    <br>
     <canvas id="lowpass"></canvas>
     <canvas id="highpass"></canvas>
-    <a href="https://github.com/TheNyanta/FilterbankJS" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://raw.githubusercontent.com/TheNyanta/FilterbankJS/master/gotosrc.png" alt="Source on GitHub" data-canonical-src="https://raw.githubusercontent.com/TheNyanta/FilterbankJS/master/gotosrc.png"></a>
 
     <script>
         // +------------------+
         // | GLOBAL VARIABLES |
         // +------------------+
 
-        // Drawing and image data handling
+        // Every canvas to draw on
         var canvas = document.getElementById("canvas");
         var ctx = canvas.getContext("2d");
-        var img = new Image();
-        var data;
-        var imageData;
-        // Drawing lowpass and highpass
+        var reconstructCanvas = document.getElementById("reconstruct");
+        var reconstructCtx= reconstructCanvas.getContext("2d");
         var lowpassCanvas = document.getElementById("lowpass");
         var lowpassCtx = lowpassCanvas.getContext("2d");
         var highpassCanvas = document.getElementById("highpass");
         var highpassCtx = highpassCanvas.getContext("2d");
+        // Image and data
+        var img = new Image();
+        var data;
+        var imageData;
         // Default Filter (Haarfilter: 1 / Math.sqrt(2))
         var h_star = [0.707, 0.707];
         var g_star = [-0.707, 0.707];
@@ -69,6 +73,8 @@
         function drawOriginal() {
             canvas.width = img.width;
             canvas.height = img.height;
+            reconstructCanvas.width = img.width;
+            reconstructCanvas.height = img.height;
             lowpassCanvas.width = img.width;
             lowpassCanvas.height = img.height
             highpassCanvas.width = img.width;
@@ -249,7 +255,7 @@
                 gray[i] = (lowpass[i] + highpass[i]);
             }
             // Draw reconstructed image, lowpass and highpass
-            drawGrayData(gray, ctx);
+            drawGrayData(gray, reconstructCtx);
             drawGrayData(lowpass, lowpassCtx);
             drawGrayData(highpass, highpassCtx);
         };
@@ -294,7 +300,7 @@
                 blue[i] = (lowpassBlue[i] + highpassBlue[i]);
             }
             // Draw reconstructed image, lowpass and highpass
-            drawColorData(red, green, blue, ctx);
+            drawColorData(red, green, blue, reconstructCtx);
             drawColorData(lowpassRed, lowpassGreen, lowpassBlue, lowpassCtx);
             drawColorData(highpassRed, highpassGreen, highpassBlue, highpassCtx);
         };
