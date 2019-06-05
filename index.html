@@ -14,6 +14,7 @@
     <br>
     <button type="button" onclick="filterbankGray()">Filterbank Gray</button>
     <button type="button" onclick="filterbankColors()">Filterbank Colors</button>
+    <button type="button" onclick="timeShift()">Time Shift</button>
     <br>
     <a>Enter own filter coeffients (either comma or space as seperator):</a>
     <br>
@@ -199,6 +200,44 @@
             }
             context.putImageData(tmp, 0, 0);
         };
+        
+        function timeShift() {
+            var tmp1 = reconstructCtx.getImageData(0, 0, canvas.width, canvas.height);
+            var tmp2 = lowpassCtx.getImageData(0, 0, canvas.width, canvas.height); 
+            var tmp3 = highpassCtx.getImageData(0, 0, canvas.width, canvas.height); 
+            red1 = [];
+            green1 = [];
+            blue1 = [];
+            red2 = [];
+            green2 = [];
+            blue2 = [];
+            red3 = [];
+            green3 = [];
+            blue3 = [];
+            for (var i = 0; i < tmp1.data.length; i += 4) {
+                red1[i / 4] = tmp1.data[i];
+                green1[i / 4] = tmp1.data[i + 1];
+                blue1[i / 4] = tmp1.data[i + 2];
+                red2[i / 4] = tmp2.data[i];
+                green2[i / 4] = tmp2.data[i + 1];
+                blue2[i / 4] = tmp2.data[i + 2];
+                red3[i / 4] = tmp3.data[i];
+                green3[i / 4] = tmp3.data[i + 1];
+                blue3[i / 4] = tmp3.data[i + 2];
+            }
+            red1.unshift(red1.pop());
+            green1.unshift(green1.pop());
+            blue1.unshift(blue1.pop());
+            red2.unshift(red2.pop());
+            green2.unshift(green2.pop());
+            blue2.unshift(blue2.pop());
+            red3.unshift(red3.pop());
+            green3.unshift(green3.pop());
+            blue3.unshift(blue3.pop());
+            drawColorData(red1, green1, blue1, reconstructCtx);            
+            drawColorData(red2, green2, blue2, lowpassCtx); 
+            drawColorData(red3, green3, blue3, highpassCtx); 
+        };
 
         // +--------------+
         // | CONVOLUTION  |
@@ -247,9 +286,6 @@
             // Apply H, G Filter
             lowpass = convolve(lowpass, h);
             highpass = convolve(highpass, g);
-            // Undo the "-1" time delay
-            lowpass.unshift(lowpass.pop());
-            highpass.unshift(highpass.pop());
             // Add the lowpass and highpass together
             for (var i = 0; i < lowpass.length; i++) {
                 gray[i] = (lowpass[i] + highpass[i]);
@@ -286,13 +322,6 @@
             highpassRed = convolve(highpassRed, g);
             highpassGreen = convolve(highpassGreen, g);
             highpassBlue = convolve(highpassBlue, g);
-            // Undo the "-1" time delay
-            lowpassRed.unshift(lowpassRed.pop());
-            lowpassGreen.unshift(lowpassGreen.pop());
-            lowpassBlue.unshift(lowpassBlue.pop());
-            highpassRed.unshift(highpassRed.pop());
-            highpassGreen.unshift(highpassGreen.pop());
-            highpassBlue.unshift(highpassBlue.pop());
             // Add the lowpass and highpass together
             for (var i = 0; i < lowpassRed.length; i++) {
                 red[i] = (lowpassRed[i] + highpassRed[i]);
