@@ -29,6 +29,8 @@
     <a id="currentFilter"></a>
     <br>
     <canvas id="canvas"></canvas>
+    <canvas id="lowpass"></canvas>
+    <canvas id="highpass"></canvas>
 
     <script>
         // +------------------+
@@ -41,7 +43,11 @@
         var img = new Image();
         var data;
         var imageData;
-
+        // Drawing lowpass and highpass
+        var lowpassCanvas = document.getElementById("lowpass");
+        var lowpassCtx = lowpassCanvas.getContext("2d");
+        var highpassCanvas = document.getElementById("highpass");
+        var highpassCtx = highpassCanvas.getContext("2d");
         // Default Filter (Haarfilter: 1 / Math.sqrt(2))
         var h_star = [0.707, 0.707];
         var g_star = [-0.707, 0.707];
@@ -56,6 +62,10 @@
             img.src = URL.createObjectURL(event.target.files[0]);
             img.onload = function() {
                 drawOriginal();
+                lowpassCanvas.width = img.width;
+                lowpassCanvas.height = img.height
+                highpassCanvas.width = img.width;
+                highpassCanvas.height = img.height
             }
         };
 
@@ -177,6 +187,26 @@
             ctx.putImageData(imageData, 0, 0);
         };
 
+        function drawGrayData(gray, context) {
+            var tmp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < tmp.data.length; i += 4) {
+                tmp.data[i] = gray[i / 4];
+                tmp.data[i + 1] = gray[i / 4];
+                tmp.data[i + 2] = gray[i / 4];
+            }
+            context.putImageData(tmp, 0, 0);
+        };
+
+        function drawColorData(red, green, blue, context) {
+            var tmp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < tmp.data.length; i += 4) {
+                tmp.data[i] = red[i / 4];
+                tmp.data[i + 1] = green[i / 4];
+                tmp.data[i + 2] = blue[i / 4];
+            }
+            context.putImageData(tmp, 0, 0);
+        };
+
         // +--------------+
         // | CONVOLUTION  |
         // +--------------+
@@ -231,6 +261,9 @@
             for (var i = 0; i < lowpass.length; i++) {
                 gray[i] = (lowpass[i] + highpass[i]);
             }
+            // Draw lowpass and highpass seperate
+            drawGrayData(lowpass, lowpassCtx);
+            drawGrayData(highpass, highpassCtx);
             // Use the grayvalues array to set the image data
             setGrayValues(gray);
         };
@@ -274,6 +307,9 @@
                 green[i] = (lowpassGreen[i] + highpassGreen[i]);
                 blue[i] = (lowpassBlue[i] + highpassBlue[i]);
             }
+            // Draw lowpass and highpass seperate
+            drawColorData(lowpassRed, lowpassGreen, lowpassBlue, lowpassCtx);
+            drawColorData(highpassRed, highpassGreen, highpassBlue, highpassCtx);
             // Use the rgb data arrays to set the image data
             setRGB(red, green, blue);
         };
