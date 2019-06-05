@@ -44,7 +44,7 @@
         var canvas = document.getElementById("canvas");
         var ctx = canvas.getContext("2d");
         var reconstructCanvas = document.getElementById("reconstruct");
-        var reconstructCtx= reconstructCanvas.getContext("2d");
+        var reconstructCtx = reconstructCanvas.getContext("2d");
         var lowpassCanvas = document.getElementById("lowpass");
         var lowpassCtx = lowpassCanvas.getContext("2d");
         var highpassCanvas = document.getElementById("highpass");
@@ -67,18 +67,18 @@
             img.src = URL.createObjectURL(event.target.files[0]);
             img.onload = function() {
                 drawOriginal();
+                reconstructCanvas.width = img.width;
+                reconstructCanvas.height = img.height;
+                lowpassCanvas.width = img.width;
+                lowpassCanvas.height = img.height
+                highpassCanvas.width = img.width;
+                highpassCanvas.height = img.height;
             }
         };
 
         function drawOriginal() {
             canvas.width = img.width;
             canvas.height = img.height;
-            reconstructCanvas.width = img.width;
-            reconstructCanvas.height = img.height;
-            lowpassCanvas.width = img.width;
-            lowpassCanvas.height = img.height
-            highpassCanvas.width = img.width;
-            highpassCanvas.height = img.height
             ctx.drawImage(img, 0, 0);
         };
 
