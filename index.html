@@ -6,6 +6,7 @@
 </head>
 
 <body style="background-color:dimgrey;">
+    <button type="button" onclick="drawTestImage()">Use Testimage</button>
     <input type="file" accept="image/*" onchange="loadFile(event)">
     <br>
     <button type="button" onclick="drawOriginal()">Draw Original</button>
@@ -15,6 +16,9 @@
     <button type="button" onclick="filterbankGray()">Filterbank Gray</button>
     <button type="button" onclick="filterbankColors()">Filterbank Colors</button>
     <button type="button" onclick="timeShift()">Undo Filters TimeShift</button>
+    <br>
+    <button type="button" onclick="compareData()">Compare</button>
+    <a id="compare"></a>
     <br>
     <a>Enter own filter coeffients (either comma or space as seperator):</a>
     <br>
@@ -26,8 +30,10 @@
     <br>
     <button onclick="setFilter()">Set Filter</button>
     <button onclick="defaultFilter()">Default Filter</button>
+    <button onclick="db20Filter()">Daubechies 20</button>
     <button onclick="showCurrentFilter()">Show Current Filter</button>
     <a id="currentFilter"></a>
+    <br>
     <a href="https://github.com/TheNyanta/FilterbankJS" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://raw.githubusercontent.com/TheNyanta/FilterbankJS/master/gotosrc.png" alt="Source on GitHub" data-canonical-src="https://raw.githubusercontent.com/TheNyanta/FilterbankJS/master/gotosrc.png"></a>
     <br>
     <canvas id="canvas"></canvas>
@@ -60,27 +66,39 @@
         var h = [0.707, 0.707];
         var g = [0.707, -0.707];
 
-        // +-----------+
-        // | FUNCTIONS |
-        // +-----------+
+        // +----------------+
+        // | ORIGINAL IMAGE |
+        // +----------------+
 
         function loadFile(event) {
             img.src = URL.createObjectURL(event.target.files[0]);
             img.onload = function() {
                 drawOriginal();
-                reconstructCanvas.width = img.width;
-                reconstructCanvas.height = img.height;
-                lowpassCanvas.width = img.width;
-                lowpassCanvas.height = img.height
-                highpassCanvas.width = img.width;
-                highpassCanvas.height = img.height;
+                resizeCanvas();
             }
+        };
+
+        function resizeCanvas() {
+            reconstructCanvas.width = img.width;
+            reconstructCanvas.height = img.height;
+            lowpassCanvas.width = img.width;
+            lowpassCanvas.height = img.height
+            highpassCanvas.width = img.width;
+            highpassCanvas.height = img.height;
         };
 
         function drawOriginal() {
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
+        };
+
+        function drawTestImage() {
+            img.src = "lena.jpg";
+            img.onload = function() {
+                drawOriginal();
+                resizeCanvas();
+            }
         };
 
         function refreshData() {
@@ -139,6 +157,13 @@
             g_star = [-0.707, 0.707];
             h = [0.707, 0.707];
             g = [0.707, -0.707];
+        };
+
+        function db20Filter() {
+            h_star = [-2.998836489615753e-10, 4.05612705554717e-9, -1.814843248297622e-8, 2.0143220235374613e-10, 2.633924226266962e-7, -6.847079596993149e-7, -0.0000010119940100181473, 0.000007241248287663791, -0.000004376143862182197, -0.00003710586183390615, 0.00006774280828373048, 0.00010153288973669777, -0.0003851047486990061, -0.00005349759844340453, 0.0013925596193045254, -0.0008315621728772474, -0.003581494259744107, 0.00442054238676635, 0.0067216273018096935, -0.013810526137727442, -0.008789324924555765, 0.03229429953011916, 0.0058746818113949465, -0.061722899624668884, 0.005632246857685454, 0.10229171917513397, -0.024716827337521424, -0.1554587507060453, 0.039850246458519104, 0.22829105082013823, -0.016727088308801888, -0.3267868004335376, -0.13921208801128787, 0.36150229873889705, 0.6104932389378558, 0.4726961853103315, 0.21994211355113222, 0.06342378045900529, 0.010549394624937735, 0.0007799536136659112];
+            g_star = [-0.0007799536136659112, 0.010549394624937735, -0.06342378045900529, 0.21994211355113222, -0.4726961853103315, 0.6104932389378558, -0.36150229873889705, -0.13921208801128787, 0.3267868004335376, -0.016727088308801888, -0.22829105082013823, 0.039850246458519104, 0.1554587507060453, -0.024716827337521424, -0.10229171917513397, 0.005632246857685454, 0.061722899624668884, 0.0058746818113949465, -0.03229429953011916, -0.008789324924555765, 0.013810526137727442, 0.0067216273018096935, -0.00442054238676635, -0.003581494259744107, 0.0008315621728772474, 0.0013925596193045254, 0.00005349759844340453, -0.0003851047486990061, -0.00010153288973669777, 0.00006774280828373048, 0.00003710586183390615, -0.000004376143862182197, -0.000007241248287663791, -0.0000010119940100181473, 6.847079596993149e-7, 2.633924226266962e-7, -2.0143220235374613e-10, -1.814843248297622e-8, -4.05612705554717e-9, -2.998836489615753e-10];
+            h = [0.0007799536136659112, 0.010549394624937735, 0.06342378045900529, 0.21994211355113222, 0.4726961853103315, 0.6104932389378558, 0.36150229873889705, -0.13921208801128787, -0.3267868004335376, -0.016727088308801888, 0.22829105082013823, 0.039850246458519104, -0.1554587507060453, -0.024716827337521424, 0.10229171917513397, 0.005632246857685454, -0.061722899624668884, 0.0058746818113949465, 0.03229429953011916, -0.008789324924555765, -0.013810526137727442, 0.0067216273018096935, 0.00442054238676635, -0.003581494259744107, -0.0008315621728772474, 0.0013925596193045254, -0.00005349759844340453, -0.0003851047486990061, 0.00010153288973669777, 0.00006774280828373048, -0.00003710586183390615, -0.000004376143862182197, 0.000007241248287663791, -0.0000010119940100181473, -6.847079596993149e-7, 2.633924226266962e-7, 2.0143220235374613e-10, -1.814843248297622e-8, 4.05612705554717e-9, -2.998836489615753e-10];
+            g = [-2.998836489615753e-10, -4.05612705554717e-9, -1.814843248297622e-8, -2.0143220235374613e-10, 2.633924226266962e-7, 6.847079596993149e-7, -0.0000010119940100181473, -0.000007241248287663791, -0.000004376143862182197, 0.00003710586183390615, 0.00006774280828373048, -0.00010153288973669777, -0.0003851047486990061, 0.00005349759844340453, 0.0013925596193045254, 0.0008315621728772474, -0.003581494259744107, -0.00442054238676635, 0.0067216273018096935, 0.013810526137727442, -0.008789324924555765, -0.03229429953011916, 0.0058746818113949465, 0.061722899624668884, 0.005632246857685454, -0.10229171917513397, -0.024716827337521424, 0.1554587507060453, 0.039850246458519104, -0.22829105082013823, -0.016727088308801888, 0.3267868004335376, -0.13921208801128787, -0.36150229873889705, 0.6104932389378558, -0.4726961853103315, 0.21994211355113222, -0.06342378045900529, 0.010549394624937735, -0.0007799536136659112];
         };
 
         function showCurrentFilter() {
@@ -200,6 +225,10 @@
             }
             context.putImageData(tmp, 0, 0);
         };
+
+        // +-----------------------+
+        // | UNDO FILTER TIMESHIFT |
+        // +-----------------------+
 
         function timeShift() {
             var tmp1 = reconstructCtx.getImageData(0, 0, canvas.width, canvas.height);
@@ -267,13 +296,21 @@
         // | DOWN- AND UPSAMPLING  |
         // +-----------------------+
 
-        function downAndUpsample(values) {
-            for (var i = 0; i < values.length; i++) {
-                if (i % 2 == 1) {
-                    values[i] = 0;
-                }
+        function downsample(values) {
+            var result = [];
+            for (var i = 0; i < values.length; i = i + 2) {
+                result[i / 2] = values[i];
             }
-            return values;
+            return result;
+        };
+
+        function upsample(values) {
+            var result = [];
+            for (var i = 0; i < values.length; i++) {
+                result[2 * i] = values[i];
+                result[2 * i + 1] = 0;
+            }
+            return result;
         };
 
         // +-------------+
@@ -287,8 +324,8 @@
             var lowpass = convolve(gray, h_star);
             var highpass = convolve(gray, g_star);
             // Down- and Upsample
-            lowpass = downAndUpsample(lowpass);
-            highpass = downAndUpsample(highpass);
+            lowpass = upsample(downsample(lowpass));
+            highpass = upsample(downsample(highpass));
             // Apply H, G Filter
             lowpass = convolve(lowpass, h);
             highpass = convolve(highpass, g);
@@ -315,12 +352,12 @@
             var highpassGreen = convolve(green, g_star);
             var highpassBlue = convolve(blue, g_star);
             // Down- and Upsample
-            lowpassRed = downAndUpsample(lowpassRed);
-            lowpassGreen = downAndUpsample(lowpassGreen);
-            lowpassBlue = downAndUpsample(lowpassBlue);
-            highpassRed = downAndUpsample(highpassRed);
-            highpassGreen = downAndUpsample(highpassGreen);
-            highpassBlue = downAndUpsample(highpassBlue);
+            lowpassRed = upsample(downsample(lowpassRed));
+            lowpassGreen = upsample(downsample(lowpassGreen));
+            lowpassBlue = upsample(downsample(lowpassBlue));
+            highpassRed = upsample(downsample(highpassRed));
+            highpassGreen = upsample(downsample(highpassGreen));
+            highpassBlue = upsample(downsample(highpassBlue));
             // Apply H, G Filter
             lowpassRed = convolve(lowpassRed, h);
             lowpassGreen = convolve(lowpassGreen, h);
@@ -338,6 +375,28 @@
             drawColorData(red, green, blue, reconstructCtx);
             drawColorData(lowpassRed, lowpassGreen, lowpassBlue, lowpassCtx);
             drawColorData(highpassRed, highpassGreen, highpassBlue, highpassCtx);
+        };
+
+        // +---------+
+        // | COMPARE |
+        // +---------+
+
+        function compareOriginalAndReconstructed() {
+            var x = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            var y = reconstructCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+            for (var i = 0; i < x.length; i++) {
+                if (x[i] != y[i])
+                    return false;
+            }
+            return true;
+        };
+
+        function compareData() {
+            if (compareOriginalAndReconstructed()) {
+                document.getElementById("compare").innerHTML = "True"
+            } else {
+                document.getElementById("compare").innerHTML = "False";
+            }
         };
 
     </script>
